@@ -2,7 +2,34 @@
 import argparse
 import json
 import sys
+import re
+from urllib.parse import unquote
 METHODS={'get','put','post','delete','options','head','patch','trace'}
+def resolve_parameter(spec, parameter):
+    seen = set()
+    while isinstance(parameter, dict) and '$ref' in parameter:
+        ref = parameter['$ref']
+        if not isinstance(ref, str) or not ref.startswith('#/'):
+            raise ValueError('Only same-document JSON Pointer parameter references are supported')
+        pointer = unquote(ref[1:])
+        if pointer in seen:
+            raise ValueError('Parameter reference cycle detected')
+        seen.add(pointer)
+        if len(seen) > 100:
+            raise ValueError('Parameter reference chain exceeds 100 links')
+        target = spec
+        for token in pointer[1:].split('/'):
+            if re.search(r'~(?![01])', token):
+                raise ValueError('Invalid JSON Pointer escape')
+            key = token.replace('~1', '/').replace('~0', '~')
+            if not isinstance(target, dict) or key not in target:
+                raise ValueError('Parameter reference does not resolve: ' + ref)
+            target = target[key]
+        parameter = target
+    if not isinstance(parameter, dict):
+        raise ValueError('Parameter reference must resolve to an object')
+    return parameter
+
 def operations(spec):
     if not isinstance(spec,dict) or not str(spec.get('openapi','')).startswith('3.') or not isinstance(spec.get('paths'),dict):raise ValueError('Expected OpenAPI 3.x JSON with a paths object')
     result={}
@@ -14,7 +41,7 @@ def operations(spec):
             if not isinstance(op,dict):raise ValueError('Operations must be objects')
             params={}
             for param in item.get('parameters',[])+op.get('parameters',[]):
-                if not isinstance(param,dict) or '$ref' in param:raise ValueError('Inline parameters required; references not supported yet')
+                param = resolve_parameter(spec, param)
                 if not isinstance(param.get('name'),str) or param.get('in') not in ('query','path','header','cookie'):raise ValueError('Parameters require a name and location')
                 params[(param['in'],param['name'])]=param.get('required',False) is True
             result[(method,path)]=params
@@ -35,6 +62,7 @@ def main():
     try:
         with open(a.before,encoding='utf-8') as f:before=json.load(f)
         with open(a.after,encoding='utf-8') as f:after=json.load(f)
-        changes=compare(before,after);print(json.dumps({'scope':'operation removals and newly required inline parameters only','breaking_changes':changes},indent=2));return int(bool(changes))
+        changes=compare(before,after);print(json.dumps({'scope':'operation removals and newly required inline/local-reference parameters only','breaking_changes':changes},indent=2));return int(bool(changes))
     except (OSError,ValueError,TypeError,AttributeError) as exc:print(str(exc),file=sys.stderr);return 2
 if __name__=='__main__':sys.exit(main())
+

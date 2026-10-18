@@ -1,6 +1,6 @@
 # Schema Watch
 
-Find removed HTTP operations and newly required inline parameters between OpenAPI 3.x JSON documents.
+Find removed HTTP operations and newly required inline or same-document referenced parameters between OpenAPI 3.x JSON documents.
 
 **Status:** runnable CLI foundation. No hosted demo or dashboard is available yet. Examples use synthetic offline data. Python 3.10+; standard library only. Validated with Python 3.12.
 
@@ -23,6 +23,12 @@ Exit codes: `0` means no changes detected within the supported scope, `1` means 
 
 Run `python app.py --help` for available options.
 
+## Reusable parameter references
+
+Parameter lists now support references such as `{"$ref":"#/components/parameters/id"}`. Same-document chains are resolved with cycle detection and a 100-link bound. URI-fragment percent encoding and JSON Pointer `~1`/`~0` escapes are supported. Missing targets, non-object parameters, external references and cycles fail with exit code 2 instead of being silently skipped. No reference triggers a network request.
+
+Resolution applies to path-level and operation-level parameter lists. Operation-level parameters still override matching inherited parameters. `$ref` siblings do not change the referenced parameter's requiredness. This is deliberately narrower than full OpenAPI reference support; see the [OpenAPI reference rules](https://spec.openapis.org/oas/v3.1.0.html#reference-object).
+
 ## Development and verification
 
 ```bash
@@ -30,7 +36,7 @@ python -m unittest discover -s tests -v
 python -m compileall -q app.py tests
 ```
 
-Tests exercise behavior with temporary/local data. PufferFish's recording test uses only a loopback HTTP server. There is no build step or configured linter; compilation is a syntax check, not linting.
+Tests cover operation/parameter comparisons, same-document references, pointer escaping, inheritance and rejected reference inputs. There is no build step or configured linter; compilation is a syntax check, not linting.
 
 ## Configuration
 
@@ -40,7 +46,7 @@ Configuration is provided through CLI arguments. No environment variables, `.env
 
 ```text
 app.py          CLI and core domain functions
-examples/       synthetic example inputs (queue-lab uses commands above)
+examples/       synthetic example inputs
 tests/          behavioral unit tests
 ROADMAP.md      completed work and prioritized next steps
 .env.example    configuration notes
@@ -54,7 +60,7 @@ A single dependency-free module exposes importable core functions and a CLI entr
 
 ## Limitations
 
-This is a partial checker, not an OpenAPI validator or compatibility guarantee. It does not check request/response schemas, status codes, content types, security requirements or YAML. Path-item and parameter `$ref` references are rejected; nested schema references are not analyzed. No dashboard yet.
+This is a partial checker, not an OpenAPI validator or compatibility guarantee. It does not check request/response schemas, status codes, content types, security requirements or YAML. Path-item `$ref` references are rejected; nested schema references are not analyzed. Parameter references support same-document object-key JSON Pointers only; array-index pointers, external files and network references are not supported. No dashboard yet.
 
 ## Running and deployment
 
@@ -72,3 +78,4 @@ Run locally from the repository using the commands above. No hosted deployment h
 Open an issue describing the observed behavior, expected result and a minimal synthetic example. Keep changes focused, include behavioral tests, run the checks above, and update this README when commands or capabilities change. Do not submit credentials or private input files.
 
 Implementation and synthetic examples are original to this repository. There are no third-party runtime dependencies or media assets. A redistribution license has not yet been selected; public visibility alone does not grant an open-source license.
+
