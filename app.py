@@ -4,6 +4,7 @@ import json
 import sys
 import re
 from urllib.parse import unquote
+from contracts import compare_contracts
 METHODS={'get','put','post','delete','options','head','patch','trace'}
 def resolve_parameter(spec, parameter):
     seen = set()
@@ -55,14 +56,17 @@ def compare(before,after):
             for param,required in sorted(new[(method,path)].items()):
                 if required and not old[(method,path)].get(param,False):
                     changes.append({'kind':'new_required_parameter','operation':f'{method.upper()} {path}','location':param[0],'name':param[1]})
-    return changes
+    return changes + compare_contracts(before, after, old.keys() & new.keys())[0]
 
 def main():
     p=argparse.ArgumentParser(description=__doc__);p.add_argument('before');p.add_argument('after');a=p.parse_args()
     try:
         with open(a.before,encoding='utf-8') as f:before=json.load(f)
         with open(a.after,encoding='utf-8') as f:after=json.load(f)
-        changes=compare(before,after);print(json.dumps({'scope':'operation removals and newly required inline/local-reference parameters only','breaking_changes':changes},indent=2));return int(bool(changes))
+        changes=compare(before,after)
+        _, warnings=compare_contracts(before,after,operations(before).keys() & operations(after).keys())
+        print(json.dumps({'scope':'operation/parameter checks plus top-level inline application/json type and required-property checks','breaking_changes':changes,'coverage_warnings':warnings},indent=2));return int(bool(changes))
     except (OSError,ValueError,TypeError,AttributeError) as exc:print(str(exc),file=sys.stderr);return 2
 if __name__=='__main__':sys.exit(main())
+
 

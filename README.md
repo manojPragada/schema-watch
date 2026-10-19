@@ -29,6 +29,12 @@ Parameter lists now support references such as `{"$ref":"#/components/parameters
 
 Resolution applies to path-level and operation-level parameter lists. Operation-level parameters still override matching inherited parameters. `$ref` siblings do not change the referenced parameter's requiredness. This is deliberately narrower than full OpenAPI reference support; see the [OpenAPI reference rules](https://spec.openapis.org/oas/v3.1.0.html#reference-object).
 
+## Directional body-contract checks
+
+For inline `application/json` request and matching-status response schemas, the checker now detects narrowed accepted request types, widened response types, newly required request properties and removed response required-property guarantees. It also detects a newly required request body. Integer is treated as a subset of number; single type names and OpenAPI 3.0 `nullable` are supported.
+
+These are **top-level, partial checks**, not complete schema compatibility analysis. Nested property schemas and constraints are not traversed. Schema references, composition, boolean schemas, type arrays and readOnly/writeOnly property contracts produce `coverage_warnings` and are skipped. Exit 0 means no detected changes within checked scope, even when warnings exist; CI users must inspect warnings too. A required-property result follows the [JSON Schema object contract](https://json-schema.org/understanding-json-schema/reference/object); response/request direction is the tool's compatibility rule.
+
 ## Development and verification
 
 ```bash
@@ -45,7 +51,8 @@ Configuration is provided through CLI arguments. No environment variables, `.env
 ## Structure
 
 ```text
-app.py          CLI and core domain functions
+app.py          CLI and operation/parameter checks
+contracts.py    partial directional JSON body checks
 examples/       synthetic example inputs
 tests/          behavioral unit tests
 ROADMAP.md      completed work and prioritized next steps
@@ -60,7 +67,7 @@ A single dependency-free module exposes importable core functions and a CLI entr
 
 ## Limitations
 
-This is a partial checker, not an OpenAPI validator or compatibility guarantee. It does not check request/response schemas, status codes, content types, security requirements or YAML. Path-item `$ref` references are rejected; nested schema references are not analyzed. Parameter references support same-document object-key JSON Pointers only; array-index pointers, external files and network references are not supported. No dashboard yet.
+This is a partial checker, not an OpenAPI validator or compatibility guarantee. Body checks cover only top-level types and required-property sets for inline application/json schemas present on both sides. Nested property types, enum/range constraints, removed media types/status codes, security requirements and YAML are not checked. Path-item `$ref` references are rejected; nested schema references are not analyzed. Parameter references support same-document object-key JSON Pointers only; array-index pointers, external files and network references are not supported. No dashboard yet.
 
 ## Running and deployment
 
@@ -78,4 +85,5 @@ Run locally from the repository using the commands above. No hosted deployment h
 Open an issue describing the observed behavior, expected result and a minimal synthetic example. Keep changes focused, include behavioral tests, run the checks above, and update this README when commands or capabilities change. Do not submit credentials or private input files.
 
 Implementation and synthetic examples are original to this repository. There are no third-party runtime dependencies or media assets. A redistribution license has not yet been selected; public visibility alone does not grant an open-source license.
+
 
