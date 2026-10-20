@@ -16,6 +16,8 @@
 
 ## Continuity
 
+2026-10-20: Added bounded nested-property/array-item type and requiredness comparison, exact schema paths and explicit warnings for unsupported constraints/missing properties/depth limits. Seven new regression tests. Next: local schema references and constraint coverage; nested support remains partial, not complete compatibility analysis.
+
 Initial foundation implemented and checked on 2026-10-17. Inspect current code and commits before continuing. Prioritize the first unchecked item and keep improvements small enough to verify. No visual dashboard has been implemented.
 
 
@@ -23,3 +25,4 @@ Initial foundation implemented and checked on 2026-10-17. Inspect current code a
 
 
 2026-10-19: Added directional top-level JSON body checks with coverage warnings for unsupported schemas. Nested properties, removed statuses/media and schema references remain outside checked scope. Next: nested body coverage or local reference extension.
+

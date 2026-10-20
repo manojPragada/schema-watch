@@ -65,8 +65,9 @@ def main():
         with open(a.after,encoding='utf-8') as f:after=json.load(f)
         changes=compare(before,after)
         _, warnings=compare_contracts(before,after,operations(before).keys() & operations(after).keys())
-        print(json.dumps({'scope':'operation/parameter checks plus top-level inline application/json type and required-property checks','breaking_changes':changes,'coverage_warnings':warnings},indent=2));return int(bool(changes))
+        print(json.dumps({'scope':'operation/parameter checks plus bounded nested inline application/json type and required-property checks','breaking_changes':changes,'coverage_warnings':warnings},indent=2));return int(bool(changes))
     except (OSError,ValueError,TypeError,AttributeError) as exc:print(str(exc),file=sys.stderr);return 2
 if __name__=='__main__':sys.exit(main())
+
 
 

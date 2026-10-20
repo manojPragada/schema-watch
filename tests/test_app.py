@@ -61,3 +61,4 @@ class Tests(unittest.TestCase):
     def test_new_required_body_detected(self):
         old=self.spec({});new=self.body({'type':'object'});new['paths']['/pets']['get']['requestBody']['required']=True
         self.assertEqual(compare(old,new)[0]['kind'],'new_required_request_body')
+

@@ -1,4 +1,5 @@
 """Partial, directional checks for inline application/json body contracts."""
+import json
 TYPES = {'null', 'boolean', 'object', 'array', 'string', 'integer', 'non_integer_number'}
 UNSUPPORTED = {'$ref', 'allOf', 'anyOf', 'oneOf', 'not', 'if', 'then', 'else', '$dynamicRef'}
 
@@ -33,6 +34,46 @@ def inline_schema(schema):
     return type_set(schema), set(required)
 
 
+def compare_schema(left, right, context, schema_path='$', depth=0):
+    changes, warnings = [], []
+    location = dict(context, schema_path=schema_path)
+    if depth > 32:
+        return [], [dict(location, reason='Schema nesting beyond 32 levels not checked')]
+    try:
+        left_types, left_required = inline_schema(left)
+        right_types, right_required = inline_schema(right)
+    except ValueError as error:
+        return [], [dict(location, reason=str(error))]
+    constraints = {'enum', 'const', 'minimum', 'maximum', 'exclusiveMinimum', 'exclusiveMaximum',
+                   'multipleOf', 'minLength', 'maxLength', 'pattern', 'format', 'minItems',
+                   'maxItems', 'uniqueItems', 'contains', 'prefixItems', 'additionalProperties',
+                   'patternProperties', 'unevaluatedProperties', 'dependentRequired',
+                   'dependentSchemas', 'minProperties', 'maxProperties'}
+    unchecked = sorted((left.keys() | right.keys()) & constraints)
+    if unchecked:
+        warnings.append(dict(location, reason='Constraints not checked: ' + ', '.join(unchecked)))
+    direction = context['direction']
+    incompatible = left_types - right_types if direction == 'request' else right_types - left_types
+    if incompatible:
+        changes.append(dict(location, kind=direction + '_type_incompatible'))
+    if 'object' in left_types and 'object' in right_types:
+        lost = right_required - left_required if direction == 'request' else left_required - right_required
+        for name in sorted(lost):
+            changes.append(dict(location, kind='new_required_request_property' if direction == 'request' else 'response_required_guarantee_removed', name=name))
+        old_props, new_props = left.get('properties', {}), right.get('properties', {})
+        for name in sorted(old_props.keys() | new_props.keys()):
+            child_path = schema_path + '[' + json.dumps(name) + ']'
+            if name not in old_props or name not in new_props:
+                warnings.append(dict(context, schema_path=child_path, reason='Property added/removed; interaction with additional properties not checked'))
+                continue
+            found, skipped = compare_schema(old_props[name], new_props[name], context, child_path, depth + 1)
+            changes.extend(found); warnings.extend(skipped)
+    if 'array' in left_types and 'array' in right_types and ('items' in left or 'items' in right):
+        found, skipped = compare_schema(left.get('items', {}), right.get('items', {}), context, schema_path + '[*]', depth + 1)
+        changes.extend(found); warnings.extend(skipped)
+    return changes, warnings
+
+
 def compare_contracts(before, after, operations):
     changes, warnings = [], []
     for method, path in sorted(operations):
@@ -62,17 +103,11 @@ def compare_contracts(before, after, operations):
                 left_media, right_media = left_content['application/json'], right_content['application/json']
                 if not isinstance(left_media, dict) or not isinstance(right_media, dict):
                     raise ValueError('Malformed media type object')
-                left_types, left_required = inline_schema(left_media.get('schema', {}))
-                right_types, right_required = inline_schema(right_media.get('schema', {}))
+                found, skipped = compare_schema(left_media.get('schema', {}), right_media.get('schema', {}), context)
             except ValueError as error:
                 warnings.append(dict(context, reason=str(error)))
                 continue
-            incompatible = left_types - right_types if direction == 'request' else right_types - left_types
-            if incompatible:
-                changes.append(dict(context, kind=direction + '_type_incompatible'))
-            # Required applies only to objects; no property-level type inference is attempted.
-            if 'object' in left_types and 'object' in right_types:
-                lost = right_required - left_required if direction == 'request' else left_required - right_required
-                for name in sorted(lost):
-                    changes.append(dict(context, kind='new_required_request_property' if direction == 'request' else 'response_required_guarantee_removed', name=name))
+            changes.extend(found)
+            warnings.extend(skipped)
     return changes, warnings
+

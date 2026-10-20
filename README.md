@@ -63,6 +63,10 @@ ROADMAP.md      completed work and prioritized next steps
 
 ## Architecture
 
+Body type and required-property checks now recurse through common inline object properties and homogeneous array `items`, with paths such as `$["profile"]["id"]` and `$[*]`. Request narrowing and response widening are checked directionally. Nesting beyond 32 levels, references, composition, boolean schemas, property additions/removals and unsupported constraints produce coverage warnings. Numeric/string limits, enums, formats and additional-property policies are not compatibility-checked. No findings is **not** proof of compatibility; inspect `coverage_warnings`, which do not change the existing exit code. This remains a partial checker, not a full schema validator.
+
+Semantics references: [JSON Schema object properties](https://json-schema.org/understanding-json-schema/reference/object) and [OpenAPI Schema Object](https://spec.openapis.org/oas/v3.0.4.html#schema-object). `readOnly`/`writeOnly` contracts remain explicitly unsupported rather than guessed across dialects.
+
 A single dependency-free module exposes importable core functions and a CLI entry point. Filesystem and network access occur only when the corresponding commands run. This small foundation will be split into a package, integrations and UI as those features arrive; see the roadmap.
 
 ## Limitations
@@ -85,5 +89,6 @@ Run locally from the repository using the commands above. No hosted deployment h
 Open an issue describing the observed behavior, expected result and a minimal synthetic example. Keep changes focused, include behavioral tests, run the checks above, and update this README when commands or capabilities change. Do not submit credentials or private input files.
 
 Implementation and synthetic examples are original to this repository. There are no third-party runtime dependencies or media assets. A redistribution license has not yet been selected; public visibility alone does not grant an open-source license.
+
 
 
