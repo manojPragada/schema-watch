@@ -33,13 +33,13 @@ Resolution applies to path-level and operation-level parameter lists. Operation-
 
 For inline `application/json` request and matching-status response schemas, the checker now detects narrowed accepted request types, widened response types, newly required request properties and removed response required-property guarantees. It also detects a newly required request body. Integer is treated as a subset of number; single type names and OpenAPI 3.0 `nullable` are supported.
 
-These are **top-level, partial checks**, not complete schema compatibility analysis. Nested property schemas and constraints are not traversed. Schema references, composition, boolean schemas, type arrays and readOnly/writeOnly property contracts produce `coverage_warnings` and are skipped. Exit 0 means no detected changes within checked scope, even when warnings exist; CI users must inspect warnings too. A required-property result follows the [JSON Schema object contract](https://json-schema.org/understanding-json-schema/reference/object); response/request direction is the tool's compatibility rule.
+These are **bounded, partial checks**, not complete schema compatibility analysis. Inline nested properties and homogeneous array items are traversed up to 32 levels. Constraints are not compared. Schema references, composition, boolean schemas, type arrays and readOnly/writeOnly property contracts produce `coverage_warnings` and are skipped. Exit 0 means no detected changes within checked scope, even when warnings exist; CI users must inspect warnings too. A required-property result follows the [JSON Schema object contract](https://json-schema.org/understanding-json-schema/reference/object); response/request direction is the tool's compatibility rule.
 
 ## Development and verification
 
 ```bash
 python -m unittest discover -s tests -v
-python -m compileall -q app.py tests
+python -m compileall -q app.py contracts.py tests
 ```
 
 Tests cover operation/parameter comparisons, same-document references, pointer escaping, inheritance and rejected reference inputs. There is no build step or configured linter; compilation is a syntax check, not linting.
@@ -67,11 +67,11 @@ Body type and required-property checks now recurse through common inline object 
 
 Semantics references: [JSON Schema object properties](https://json-schema.org/understanding-json-schema/reference/object) and [OpenAPI Schema Object](https://spec.openapis.org/oas/v3.0.4.html#schema-object). `readOnly`/`writeOnly` contracts remain explicitly unsupported rather than guessed across dialects.
 
-A single dependency-free module exposes importable core functions and a CLI entry point. Filesystem and network access occur only when the corresponding commands run. This small foundation will be split into a package, integrations and UI as those features arrive; see the roadmap.
+The dependency-free CLI in app.py handles operation/parameter checks; contracts.py handles bounded inline body comparison. No network requests or external reference resolution occur. A package and UI remain future work; see the roadmap.
 
 ## Limitations
 
-This is a partial checker, not an OpenAPI validator or compatibility guarantee. Body checks cover only top-level types and required-property sets for inline application/json schemas present on both sides. Nested property types, enum/range constraints, removed media types/status codes, security requirements and YAML are not checked. Path-item `$ref` references are rejected; nested schema references are not analyzed. Parameter references support same-document object-key JSON Pointers only; array-index pointers, external files and network references are not supported. No dashboard yet.
+This is a partial checker, not an OpenAPI validator or compatibility guarantee. Body checks cover bounded inline application/json types and required-property sets, including common nested properties and homogeneous array items. Enum/range constraints, removed media types/status codes, security requirements and YAML are not checked. Path-item `$ref` references are rejected; nested schema references are not analyzed. Parameter references support same-document object-key JSON Pointers only; array-index pointers, external files and network references are not supported. No dashboard yet.
 
 ## Running and deployment
 
