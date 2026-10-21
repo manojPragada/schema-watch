@@ -12,9 +12,12 @@
 - [ ] Extend body checks to nested property types and constraints
 - [x] Resolve same-document parameter references with cycle detection
 - [ ] Extend reference resolution to path items and schemas
-- [ ] Add readable HTML diff and CI integration
+- [x] Add readable standalone HTML diff
+- [ ] Add documented CI annotations and warning policy
 
 ## Continuity
+
+2026-10-21: Added a responsive standalone HTML report with finding counts and keyboard-accessible breaking/warning filters. Reports contain no external assets or requests and preserve the CLI's compatibility exit code. Next: local schema references and documented CI annotations.
 
 2026-10-20: Added bounded nested-property/array-item type and requiredness comparison, exact schema paths and explicit warnings for unsupported constraints/missing properties/depth limits. Seven new regression tests. Next: local schema references and constraint coverage; nested support remains partial, not complete compatibility analysis.
 

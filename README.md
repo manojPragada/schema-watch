@@ -2,7 +2,7 @@
 
 Find removed HTTP operations and newly required inline or same-document referenced parameters between OpenAPI 3.x JSON documents.
 
-**Status:** runnable CLI foundation. No hosted demo or dashboard is available yet. Examples use synthetic offline data. Python 3.10+; standard library only. Validated with Python 3.12.
+**Status:** runnable CLI plus standalone HTML findings report. No hosted demo is available. Examples use synthetic offline data. Python 3.10+; standard library only. Validated with Python 3.12.
 
 ## Quick start
 
@@ -23,6 +23,14 @@ Exit codes: `0` means no changes detected within the supported scope, `1` means 
 
 Run `python app.py --help` for available options.
 
+## Local HTML comparison report
+
+```bash
+python app.py examples/before.json examples/after.json --html schema-report.html
+```
+
+The command writes a standalone responsive report with finding totals and interactive breaking-change/coverage-warning filters. It intentionally preserves the normal exit code (`1` when supported checks detect a break), does not overwrite an existing report and contains no external assets, analytics or network requests.
+
 ## Reusable parameter references
 
 Parameter lists now support references such as `{"$ref":"#/components/parameters/id"}`. Same-document chains are resolved with cycle detection and a 100-link bound. URI-fragment percent encoding and JSON Pointer `~1`/`~0` escapes are supported. Missing targets, non-object parameters, external references and cycles fail with exit code 2 instead of being silently skipped. No reference triggers a network request.
@@ -39,7 +47,7 @@ These are **bounded, partial checks**, not complete schema compatibility analysi
 
 ```bash
 python -m unittest discover -s tests -v
-python -m compileall -q app.py contracts.py tests
+python -m compileall -q app.py contracts.py report.py tests
 ```
 
 Tests cover operation/parameter comparisons, same-document references, pointer escaping, inheritance and rejected reference inputs. There is no build step or configured linter; compilation is a syntax check, not linting.
@@ -53,6 +61,7 @@ Configuration is provided through CLI arguments. No environment variables, `.env
 ```text
 app.py          CLI and operation/parameter checks
 contracts.py    partial directional JSON body checks
+report.py       standalone interactive HTML findings renderer
 examples/       synthetic example inputs
 tests/          behavioral unit tests
 ROADMAP.md      completed work and prioritized next steps
