@@ -23,6 +23,17 @@ Exit codes: `0` means no changes detected within the supported scope, `1` means 
 
 Run `python app.py --help` for available options.
 
+## CI annotations and warning policy
+
+In GitHub Actions, emit escaped workflow annotations for every supported breaking change and coverage warning:
+
+```bash
+python app.py before.json after.json --github-annotations
+python app.py before.json after.json --github-annotations --fail-on-warnings
+```
+
+Breaking changes always return exit code 1. Coverage warnings normally preserve exit code 0, because they mean “not checked,” not “known break”; `--fail-on-warnings` opts into exit 1 for stricter repositories. Invalid inputs still return 2. The annotation output escapes workflow-command control characters and names the compared `after` file, but does not invent source line numbers.
+
 ## Local HTML comparison report
 
 ```bash
@@ -47,7 +58,7 @@ These are **bounded, partial checks**, not complete schema compatibility analysi
 
 ```bash
 python -m unittest discover -s tests -v
-python -m compileall -q app.py contracts.py report.py tests
+python -m compileall -q annotations.py app.py contracts.py report.py tests
 ```
 
 Tests cover operation/parameter comparisons, same-document references, pointer escaping, inheritance and rejected reference inputs. There is no build step or configured linter; compilation is a syntax check, not linting.
@@ -60,6 +71,7 @@ Configuration is provided through CLI arguments. No environment variables, `.env
 
 ```text
 app.py          CLI and operation/parameter checks
+annotations.py  escaped GitHub Actions findings output
 contracts.py    partial directional JSON body checks
 report.py       standalone interactive HTML findings renderer
 examples/       synthetic example inputs

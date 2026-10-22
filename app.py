@@ -59,18 +59,22 @@ def compare(before,after):
     return changes + compare_contracts(before, after, old.keys() & new.keys())[0]
 
 def main():
-    p=argparse.ArgumentParser(description=__doc__);p.add_argument('before');p.add_argument('after');p.add_argument('--html',metavar='OUTPUT',help='Write a standalone local findings report');a=p.parse_args()
+    p=argparse.ArgumentParser(description=__doc__);p.add_argument('before');p.add_argument('after');p.add_argument('--html',metavar='OUTPUT',help='Write a standalone local findings report');p.add_argument('--github-annotations',action='store_true',help='Emit GitHub Actions error/warning commands');p.add_argument('--fail-on-warnings',action='store_true',help='Return exit 1 when coverage warnings exist');a=p.parse_args()
     try:
         with open(a.before,encoding='utf-8') as f:before=json.load(f)
         with open(a.after,encoding='utf-8') as f:after=json.load(f)
         changes=compare(before,after)
         _, warnings=compare_contracts(before,after,operations(before).keys() & operations(after).keys())
         result={'scope':'operation/parameter checks plus bounded nested inline application/json type and required-property checks','breaking_changes':changes,'coverage_warnings':warnings}
-        if a.html:
+        if a.github_annotations:
+            from annotations import render_annotations
+            rendered=render_annotations(changes,warnings,a.after)
+            if rendered:print(rendered)
+        elif a.html:
             from report import render_report
             with open(a.html,'x',encoding='utf-8') as output:output.write(render_report(result))
         else:print(json.dumps(result,indent=2))
-        return int(bool(changes))
+        return int(bool(changes or (a.fail_on_warnings and warnings)))
     except (OSError,ValueError,TypeError,AttributeError) as exc:print(str(exc),file=sys.stderr);return 2
 if __name__=='__main__':sys.exit(main())
 

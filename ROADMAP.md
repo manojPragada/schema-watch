@@ -13,9 +13,11 @@
 - [x] Resolve same-document parameter references with cycle detection
 - [ ] Extend reference resolution to path items and schemas
 - [x] Add readable standalone HTML diff
-- [ ] Add documented CI annotations and warning policy
+- [x] Add documented CI annotations and opt-in strict warning policy
 
 ## Continuity
+
+2026-10-22: Added escaped GitHub Actions error/warning annotations and an opt-in `--fail-on-warnings` policy while preserving the existing 0/1/2 exit contract. Next: bounded local schema-reference expansion.
 
 2026-10-21: Added a responsive standalone HTML report with finding counts and keyboard-accessible breaking/warning filters. Reports contain no external assets or requests and preserve the CLI's compatibility exit code. Next: local schema references and documented CI annotations.
 
