@@ -11,11 +11,14 @@
 - [x] Add top-level inline JSON request/response type and required-property checks
 - [ ] Extend body checks to nested property types and constraints
 - [x] Resolve same-document parameter references with cycle detection
-- [ ] Extend reference resolution to path items and schemas
+- [x] Resolve bounded same-document schema references
+- [ ] Extend reference resolution to path items
 - [x] Add readable standalone HTML diff
 - [x] Add documented CI annotations and opt-in strict warning policy
 
 ## Continuity
+
+2026-10-24: Added bounded same-document schema-reference expansion during nested request/response comparison, including pointer decoding, missing-target errors and cycle detection. External references still never trigger network access. Next: referenced path items.
 
 2026-10-22: Added escaped GitHub Actions error/warning annotations and an opt-in `--fail-on-warnings` policy while preserving the existing 0/1/2 exit contract. Next: bounded local schema-reference expansion.
 

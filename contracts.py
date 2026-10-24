@@ -1,5 +1,6 @@
 """Partial, directional checks for inline application/json body contracts."""
 import json
+from urllib.parse import unquote
 TYPES = {'null', 'boolean', 'object', 'array', 'string', 'integer', 'non_integer_number'}
 UNSUPPORTED = {'$ref', 'allOf', 'anyOf', 'oneOf', 'not', 'if', 'then', 'else', '$dynamicRef'}
 
@@ -34,12 +35,28 @@ def inline_schema(schema):
     return type_set(schema), set(required)
 
 
-def compare_schema(left, right, context, schema_path='$', depth=0):
+def resolve_local_schema(document,schema,chain=()):
+    if not isinstance(schema,dict) or '$ref' not in schema:return schema
+    reference=schema['$ref']
+    if not isinstance(reference,str) or not reference.startswith('#/') or len(chain)>=100:raise ValueError('Only bounded same-document schema references are checked')
+    if reference in chain:raise ValueError('Schema reference cycle not checked')
+    target=document
+    for raw in reference[2:].split('/'):
+        if '~' in raw.replace('~0','').replace('~1',''):raise ValueError('Invalid JSON Pointer escape in schema reference')
+        key=unquote(raw).replace('~1','/').replace('~0','~')
+        if not isinstance(target,dict) or key not in target:raise ValueError('Schema reference target not found')
+        target=target[key]
+    if not isinstance(target,dict):raise ValueError('Schema reference target must be an object')
+    return resolve_local_schema(document,target,chain+(reference,))
+
+def compare_schema(left, right, context, schema_path='$', depth=0, left_root=None, right_root=None):
     changes, warnings = [], []
     location = dict(context, schema_path=schema_path)
     if depth > 32:
         return [], [dict(location, reason='Schema nesting beyond 32 levels not checked')]
     try:
+        if left_root is not None:left=resolve_local_schema(left_root,left)
+        if right_root is not None:right=resolve_local_schema(right_root,right)
         left_types, left_required = inline_schema(left)
         right_types, right_required = inline_schema(right)
     except ValueError as error:
@@ -66,10 +83,10 @@ def compare_schema(left, right, context, schema_path='$', depth=0):
             if name not in old_props or name not in new_props:
                 warnings.append(dict(context, schema_path=child_path, reason='Property added/removed; interaction with additional properties not checked'))
                 continue
-            found, skipped = compare_schema(old_props[name], new_props[name], context, child_path, depth + 1)
+            found, skipped = compare_schema(old_props[name], new_props[name], context, child_path, depth + 1, left_root, right_root)
             changes.extend(found); warnings.extend(skipped)
     if 'array' in left_types and 'array' in right_types and ('items' in left or 'items' in right):
-        found, skipped = compare_schema(left.get('items', {}), right.get('items', {}), context, schema_path + '[*]', depth + 1)
+        found, skipped = compare_schema(left.get('items', {}), right.get('items', {}), context, schema_path + '[*]', depth + 1, left_root, right_root)
         changes.extend(found); warnings.extend(skipped)
     return changes, warnings
 
@@ -103,7 +120,7 @@ def compare_contracts(before, after, operations):
                 left_media, right_media = left_content['application/json'], right_content['application/json']
                 if not isinstance(left_media, dict) or not isinstance(right_media, dict):
                     raise ValueError('Malformed media type object')
-                found, skipped = compare_schema(left_media.get('schema', {}), right_media.get('schema', {}), context)
+                found, skipped = compare_schema(left_media.get('schema', {}), right_media.get('schema', {}), context, left_root=before, right_root=after)
             except ValueError as error:
                 warnings.append(dict(context, reason=str(error)))
                 continue

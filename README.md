@@ -52,7 +52,7 @@ Resolution applies to path-level and operation-level parameter lists. Operation-
 
 For inline `application/json` request and matching-status response schemas, the checker now detects narrowed accepted request types, widened response types, newly required request properties and removed response required-property guarantees. It also detects a newly required request body. Integer is treated as a subset of number; single type names and OpenAPI 3.0 `nullable` are supported.
 
-These are **bounded, partial checks**, not complete schema compatibility analysis. Inline nested properties and homogeneous array items are traversed up to 32 levels. Constraints are not compared. Schema references, composition, boolean schemas, type arrays and readOnly/writeOnly property contracts produce `coverage_warnings` and are skipped. Exit 0 means no detected changes within checked scope, even when warnings exist; CI users must inspect warnings too. A required-property result follows the [JSON Schema object contract](https://json-schema.org/understanding-json-schema/reference/object); response/request direction is the tool's compatibility rule.
+These are **bounded, partial checks**, not complete schema compatibility analysis. Inline nested properties and homogeneous array items are traversed up to 32 levels. Bounded same-document schema references are expanded; missing targets and cycles become coverage warnings and external references never cause network access. Constraints are not compared. Composition, boolean schemas, type arrays and readOnly/writeOnly property contracts produce `coverage_warnings` and are skipped. Exit 0 means no detected changes within checked scope, even when warnings exist; CI users must inspect warnings too. A required-property result follows the [JSON Schema object contract](https://json-schema.org/understanding-json-schema/reference/object); response/request direction is the tool's compatibility rule.
 
 ## Development and verification
 
@@ -84,7 +84,7 @@ ROADMAP.md      completed work and prioritized next steps
 
 ## Architecture
 
-Body type and required-property checks now recurse through common inline object properties and homogeneous array `items`, with paths such as `$["profile"]["id"]` and `$[*]`. Request narrowing and response widening are checked directionally. Nesting beyond 32 levels, references, composition, boolean schemas, property additions/removals and unsupported constraints produce coverage warnings. Numeric/string limits, enums, formats and additional-property policies are not compatibility-checked. No findings is **not** proof of compatibility; inspect `coverage_warnings`, which do not change the existing exit code. This remains a partial checker, not a full schema validator.
+Body type and required-property checks recurse through common object properties and homogeneous array `items`, including bounded same-document `$ref` targets, with paths such as `$["profile"]["id"]` and `$[*]`. Request narrowing and response widening are checked directionally. Nesting beyond 32 levels, unresolved/external references, composition, boolean schemas, property additions/removals and unsupported constraints produce coverage warnings. Numeric/string limits, enums, formats and additional-property policies are not compatibility-checked. No findings is **not** proof of compatibility; inspect `coverage_warnings`, which do not change the existing exit code. This remains a partial checker, not a full schema validator.
 
 Semantics references: [JSON Schema object properties](https://json-schema.org/understanding-json-schema/reference/object) and [OpenAPI Schema Object](https://spec.openapis.org/oas/v3.0.4.html#schema-object). `readOnly`/`writeOnly` contracts remain explicitly unsupported rather than guessed across dialects.
 
@@ -92,7 +92,7 @@ The dependency-free CLI in app.py handles operation/parameter checks; contracts.
 
 ## Limitations
 
-This is a partial checker, not an OpenAPI validator or compatibility guarantee. Body checks cover bounded inline application/json types and required-property sets, including common nested properties and homogeneous array items. Enum/range constraints, removed media types/status codes, security requirements and YAML are not checked. Path-item `$ref` references are rejected; nested schema references are not analyzed. Parameter references support same-document object-key JSON Pointers only; array-index pointers, external files and network references are not supported. No dashboard yet.
+This is a partial checker, not an OpenAPI validator or compatibility guarantee. Body checks cover bounded inline or same-document-referenced application/json types and required-property sets, including common nested properties and homogeneous array items. Enum/range constraints, removed media types/status codes, security requirements and YAML are not checked. Path-item `$ref` references are rejected. Parameter and schema references support same-document object-key JSON Pointers only; array-index pointers, external files and network references are not supported. No dashboard yet.
 
 ## Running and deployment
 
