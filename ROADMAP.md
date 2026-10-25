@@ -12,11 +12,13 @@
 - [ ] Extend body checks to nested property types and constraints
 - [x] Resolve same-document parameter references with cycle detection
 - [x] Resolve bounded same-document schema references
-- [ ] Extend reference resolution to path items
+- [x] Extend reference resolution to path items
 - [x] Add readable standalone HTML diff
 - [x] Add documented CI annotations and opt-in strict warning policy
 
 ## Continuity
+
+2026-10-25: Added bounded same-document path-item reference resolution with pointer decoding, missing-target and cycle checks. Reference siblings remain an explicit coverage error rather than being merged ambiguously. Next: expand directional constraint coverage.
 
 2026-10-24: Added bounded same-document schema-reference expansion during nested request/response comparison, including pointer decoding, missing-target errors and cycle detection. External references still never trigger network access. Next: referenced path items.
 

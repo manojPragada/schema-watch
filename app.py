@@ -6,37 +6,41 @@ import re
 from urllib.parse import unquote
 from contracts import compare_contracts
 METHODS={'get','put','post','delete','options','head','patch','trace'}
-def resolve_parameter(spec, parameter):
+def resolve_object_ref(spec, value, kind):
     seen = set()
-    while isinstance(parameter, dict) and '$ref' in parameter:
-        ref = parameter['$ref']
+    while isinstance(value, dict) and '$ref' in value:
+        if len(value)!=1:raise ValueError(kind + ' reference siblings are not checked')
+        ref = value['$ref']
         if not isinstance(ref, str) or not ref.startswith('#/'):
-            raise ValueError('Only same-document JSON Pointer parameter references are supported')
+            raise ValueError('Only same-document JSON Pointer ' + kind.lower() + ' references are supported')
         pointer = unquote(ref[1:])
         if pointer in seen:
-            raise ValueError('Parameter reference cycle detected')
+            raise ValueError(kind + ' reference cycle detected')
         seen.add(pointer)
         if len(seen) > 100:
-            raise ValueError('Parameter reference chain exceeds 100 links')
+            raise ValueError(kind + ' reference chain exceeds 100 links')
         target = spec
         for token in pointer[1:].split('/'):
             if re.search(r'~(?![01])', token):
                 raise ValueError('Invalid JSON Pointer escape')
             key = token.replace('~1', '/').replace('~0', '~')
             if not isinstance(target, dict) or key not in target:
-                raise ValueError('Parameter reference does not resolve: ' + ref)
+                raise ValueError(kind + ' reference does not resolve: ' + ref)
             target = target[key]
-        parameter = target
-    if not isinstance(parameter, dict):
-        raise ValueError('Parameter reference must resolve to an object')
-    return parameter
+        value = target
+    if not isinstance(value, dict):
+        raise ValueError(kind + ' reference must resolve to an object')
+    return value
+
+def resolve_parameter(spec, parameter):
+    return resolve_object_ref(spec,parameter,'Parameter')
 
 def operations(spec):
     if not isinstance(spec,dict) or not str(spec.get('openapi','')).startswith('3.') or not isinstance(spec.get('paths'),dict):raise ValueError('Expected OpenAPI 3.x JSON with a paths object')
     result={}
     for path,item in spec['paths'].items():
         if not isinstance(item,dict):raise ValueError('Path items must be objects')
-        if '$ref' in item:raise ValueError('Path item references are not supported yet')
+        item=resolve_object_ref(spec,item,'Path item')
         for method,op in item.items():
             if method not in METHODS:continue
             if not isinstance(op,dict):raise ValueError('Operations must be objects')
@@ -48,6 +52,11 @@ def operations(spec):
             result[(method,path)]=params
     return result
 
+def resolved_paths_document(spec):
+    """Return a shallow view whose path-item references are expanded for body checks."""
+    document=dict(spec);document['paths']={path:resolve_object_ref(spec,item,'Path item') for path,item in spec['paths'].items()}
+    return document
+
 def compare(before,after):
     old=operations(before);new=operations(after);changes=[]
     for method,path in sorted(old):
@@ -56,7 +65,7 @@ def compare(before,after):
             for param,required in sorted(new[(method,path)].items()):
                 if required and not old[(method,path)].get(param,False):
                     changes.append({'kind':'new_required_parameter','operation':f'{method.upper()} {path}','location':param[0],'name':param[1]})
-    return changes + compare_contracts(before, after, old.keys() & new.keys())[0]
+    return changes + compare_contracts(resolved_paths_document(before), resolved_paths_document(after), old.keys() & new.keys())[0]
 
 def main():
     p=argparse.ArgumentParser(description=__doc__);p.add_argument('before');p.add_argument('after');p.add_argument('--html',metavar='OUTPUT',help='Write a standalone local findings report');p.add_argument('--github-annotations',action='store_true',help='Emit GitHub Actions error/warning commands');p.add_argument('--fail-on-warnings',action='store_true',help='Return exit 1 when coverage warnings exist');a=p.parse_args()

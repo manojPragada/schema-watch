@@ -36,6 +36,13 @@ class Tests(unittest.TestCase):
         t['paths']['/pets']['parameters']=[{'$ref':'#/components/parameters/id'}]
         t['components']={'parameters':{'id':{'name':'id','in':'query','required':True}}}
         self.assertEqual(compare(self.spec({}),t),[])
+    def test_referenced_path_item_is_compared(self):
+        old=self.spec({});new={'openapi':'3.1.0','paths':{'/pets':{'$ref':'#/components/pathItems/Pets'}},'components':{'pathItems':{'Pets':{'get':{'parameters':[{'name':'id','in':'query','required':True}]}}}}}
+        self.assertEqual(compare(old,new)[0]['kind'],'new_required_parameter')
+    def test_bad_path_item_references_are_rejected(self):
+        for item in [{'$ref':'#/missing'},{'$ref':'#/components/pathItems/Pets','get':{} }]:
+            spec={'openapi':'3.1.0','paths':{'/pets':item},'components':{'pathItems':{'Pets':{'get':{}}}}}
+            with self.assertRaises(ValueError):compare(self.spec({}),spec)
 
 
     def body(self, schema, direction='request'):

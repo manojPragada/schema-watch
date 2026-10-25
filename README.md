@@ -23,6 +23,8 @@ Exit codes: `0` means no changes detected within the supported scope, `1` means 
 
 Run `python app.py --help` for available options.
 
+Same-document JSON Pointer references are resolved for parameters, schemas and path items with bounded chains and cycle detection. External references never trigger network access. Path-item `$ref` siblings are rejected because their merge semantics are not analyzed.
+
 ## CI annotations and warning policy
 
 In GitHub Actions, emit escaped workflow annotations for every supported breaking change and coverage warning:
