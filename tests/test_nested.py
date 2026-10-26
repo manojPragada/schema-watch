@@ -53,3 +53,10 @@ class NestedTests(unittest.TestCase):
         self.assertTrue(self.compare({'type': 'array', 'items': False}, {'type': 'array', 'items': {}})[1])
         obj = {'type': 'object', 'properties': {'a': {'readOnly': True}}}
         self.assertTrue(self.compare(obj, obj)[1])
+    def test_enum_changes_are_directional(self):
+        old={'type':'string','enum':['a','b']};narrow={'type':'string','enum':['a']};wide={'type':'string','enum':['a','b','c']}
+        self.assertEqual(self.compare(old,narrow)[0][0]['kind'],'request_enum_incompatible')
+        self.assertEqual(self.compare(old,wide)[0],[])
+        self.assertEqual(self.compare(old,wide,'response')[0][0]['kind'],'response_enum_incompatible')
+    def test_partial_enum_transitions_warn(self):
+        self.assertIn('Enum/const',self.compare({'type':'string'},{'type':'string','const':'a'})[1][0]['reason'])

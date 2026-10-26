@@ -61,7 +61,18 @@ def compare_schema(left, right, context, schema_path='$', depth=0, left_root=Non
         right_types, right_required = inline_schema(right)
     except ValueError as error:
         return [], [dict(location, reason=str(error))]
-    constraints = {'enum', 'const', 'minimum', 'maximum', 'exclusiveMinimum', 'exclusiveMaximum',
+    def literal_values(schema):
+        if 'const' in schema:return [schema['const']]
+        return schema.get('enum')
+    old_literals,new_literals=literal_values(left),literal_values(right)
+    if old_literals is not None or new_literals is not None:
+        if not all(isinstance(values,list) and values and len(values)<=100 for values in (old_literals,new_literals)):
+            warnings.append(dict(location,reason='Enum/const transition not checked unless both sides contain 1–100 values'))
+        else:
+            old_encoded={json.dumps(value,sort_keys=True,allow_nan=False) for value in old_literals};new_encoded={json.dumps(value,sort_keys=True,allow_nan=False) for value in new_literals}
+            incompatible=old_encoded-new_encoded if context['direction']=='request' else new_encoded-old_encoded
+            if incompatible:changes.append(dict(location,kind=context['direction']+'_enum_incompatible'))
+    constraints = {'minimum', 'maximum', 'exclusiveMinimum', 'exclusiveMaximum',
                    'multipleOf', 'minLength', 'maxLength', 'pattern', 'format', 'minItems',
                    'maxItems', 'uniqueItems', 'contains', 'prefixItems', 'additionalProperties',
                    'patternProperties', 'unevaluatedProperties', 'dependentRequired',

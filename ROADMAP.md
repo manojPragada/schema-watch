@@ -10,6 +10,7 @@
 
 - [x] Add top-level inline JSON request/response type and required-property checks
 - [ ] Extend body checks to nested property types and constraints
+- [x] Add directional nested enum/const compatibility checks
 - [x] Resolve same-document parameter references with cycle detection
 - [x] Resolve bounded same-document schema references
 - [x] Extend reference resolution to path items
@@ -17,6 +18,8 @@
 - [x] Add documented CI annotations and opt-in strict warning policy
 
 ## Continuity
+
+2026-10-26: Added bounded directional enum/const comparison at every checked schema depth. Request value removal and response value addition are breaking; partial or oversized transitions remain explicit warnings. Next: numeric and string constraint directionality.
 
 2026-10-25: Added bounded same-document path-item reference resolution with pointer decoding, missing-target and cycle checks. Reference siblings remain an explicit coverage error rather than being merged ambiguously. Next: expand directional constraint coverage.
 

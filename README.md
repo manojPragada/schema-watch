@@ -25,6 +25,8 @@ Run `python app.py --help` for available options.
 
 Same-document JSON Pointer references are resolved for parameters, schemas and path items with bounded chains and cycle detection. External references never trigger network access. Path-item `$ref` siblings are rejected because their merge semantics are not analyzed.
 
+Nested enum/const checks are directional: removing an accepted request value or adding a possible response value is reported as breaking. Both sides must expose 1–100 literal values; partial transitions remain coverage warnings rather than guesses.
+
 ## CI annotations and warning policy
 
 In GitHub Actions, emit escaped workflow annotations for every supported breaking change and coverage warning:
