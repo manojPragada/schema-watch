@@ -72,12 +72,21 @@ def compare_schema(left, right, context, schema_path='$', depth=0, left_root=Non
             old_encoded={json.dumps(value,sort_keys=True,allow_nan=False) for value in old_literals};new_encoded={json.dumps(value,sort_keys=True,allow_nan=False) for value in new_literals}
             incompatible=old_encoded-new_encoded if context['direction']=='request' else new_encoded-old_encoded
             if incompatible:changes.append(dict(location,kind=context['direction']+'_enum_incompatible'))
+    def numeric_constraint(name,lower):
+        old,new=left.get(name),right.get(name)
+        if old is None and new is None:return
+        if type(old) not in (int,float) or type(new) not in (int,float):return
+        tighter=(new>old if lower else new<old) if context['direction']=='request' else (new<old if lower else new>old)
+        if tighter:changes.append(dict(location,kind=context['direction']+'_'+name+'_incompatible'))
+    for name in ('minimum','exclusiveMinimum'):numeric_constraint(name,True)
+    for name in ('maximum','exclusiveMaximum'):numeric_constraint(name,False)
     constraints = {'minimum', 'maximum', 'exclusiveMinimum', 'exclusiveMaximum',
                    'multipleOf', 'minLength', 'maxLength', 'pattern', 'format', 'minItems',
                    'maxItems', 'uniqueItems', 'contains', 'prefixItems', 'additionalProperties',
                    'patternProperties', 'unevaluatedProperties', 'dependentRequired',
                    'dependentSchemas', 'minProperties', 'maxProperties'}
-    unchecked = sorted((left.keys() | right.keys()) & constraints)
+    checked={'minimum','maximum','exclusiveMinimum','exclusiveMaximum'}
+    unchecked = sorted((left.keys() | right.keys()) & (constraints-checked))
     if unchecked:
         warnings.append(dict(location, reason='Constraints not checked: ' + ', '.join(unchecked)))
     direction = context['direction']

@@ -19,6 +19,8 @@ Use `python3` if your system does not provide `python`. No package installation 
 
 ## Usage and behavior
 
+Numeric `minimum`, `maximum`, `exclusiveMinimum`, and `exclusiveMaximum` transitions are directional: tighter request bounds and weaker response guarantees are breaking changes.
+
 Exit codes: `0` means no changes detected within the supported scope, `1` means breaking changes found, `2` means invalid input or a read error. Path-level parameters are inherited; operation-level declarations override parameters with the same location and name.
 
 Run `python app.py --help` for available options.
