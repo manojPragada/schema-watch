@@ -19,6 +19,8 @@
 
 ## Continuity
 
+2026-10-28: Added directional minLength/maxLength compatibility checks for bounded string schemas. Next: pattern/format changes should remain warnings until semantic comparison is defensible.
+
 2026-10-27: Added directional minimum/maximum and exclusive-bound checks. Tighter request acceptance or weaker response guarantees are breaking; unsupported constraint transitions remain warnings. Next: bounded string length directionality.
 
 2026-10-26: Added bounded directional enum/const comparison at every checked schema depth. Request value removal and response value addition are breaking; partial or oversized transitions remain explicit warnings. Next: numeric and string constraint directionality.
