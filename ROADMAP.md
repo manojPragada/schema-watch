@@ -19,6 +19,8 @@
 
 ## Continuity
 
+2026-10-30: Replaced noisy generic pattern/format notices with precise warnings only when those semantic constraints change; unchanged constraints no longer create false coverage noise. Next: consider additionalProperties directionality only with defensible property-set semantics.
+
 2026-10-29: Added bounded directional minItems/maxItems compatibility checks. Tighter request acceptance and weaker response guarantees are breaking; invalid or one-sided transitions remain warnings. Next: pattern/format changes should remain warnings until semantic comparison is defensible.
 
 2026-10-28: Added directional minLength/maxLength compatibility checks for bounded string schemas. Next: pattern/format changes should remain warnings until semantic comparison is defensible.

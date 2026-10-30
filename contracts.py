@@ -89,12 +89,15 @@ def compare_schema(left, right, context, schema_path='$', depth=0, left_root=Non
         if tighter:changes.append(dict(location,kind=context['direction']+'_'+name+'_incompatible'))
     length_constraint('minLength',True);length_constraint('maxLength',False)
     length_constraint('minItems',True);length_constraint('maxItems',False)
+    for name in ('pattern','format'):
+        if left.get(name)!=right.get(name) and (name in left or name in right):
+            warnings.append(dict(location,reason=name+' changed; semantic compatibility not checked'))
     constraints = {'minimum', 'maximum', 'exclusiveMinimum', 'exclusiveMaximum',
                    'multipleOf', 'minLength', 'maxLength', 'pattern', 'format', 'minItems',
                    'maxItems', 'uniqueItems', 'contains', 'prefixItems', 'additionalProperties',
                    'patternProperties', 'unevaluatedProperties', 'dependentRequired',
                    'dependentSchemas', 'minProperties', 'maxProperties'}
-    checked={'minimum','maximum','exclusiveMinimum','exclusiveMaximum','minLength','maxLength','minItems','maxItems'}
+    checked={'minimum','maximum','exclusiveMinimum','exclusiveMaximum','minLength','maxLength','minItems','maxItems','pattern','format'}
     unchecked = sorted((left.keys() | right.keys()) & (constraints-checked))
     if unchecked:
         warnings.append(dict(location, reason='Constraints not checked: ' + ', '.join(unchecked)))
