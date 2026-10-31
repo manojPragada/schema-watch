@@ -38,8 +38,8 @@ class NestedTests(unittest.TestCase):
         old = {'type': 'object', 'properties': {'old': {'type': 'string'}}}
         new = {'type': 'object', 'additionalProperties': False, 'properties': {'new': {'type': 'string'}}}
         changes, warnings = self.compare(old, new)
-        self.assertEqual(changes, [])
-        self.assertEqual(len(warnings), 3)
+        self.assertEqual(changes[0]['kind'], 'request_additional_properties_incompatible')
+        self.assertEqual(len(warnings), 2)
 
     def test_depth_limit_does_not_claim_coverage(self):
         old, new = {'type': 'string'}, {'type': 'integer'}
@@ -60,3 +60,9 @@ class NestedTests(unittest.TestCase):
         self.assertEqual(self.compare(old,wide,'response')[0][0]['kind'],'response_enum_incompatible')
     def test_partial_enum_transitions_warn(self):
         self.assertIn('Enum/const',self.compare({'type':'string'},{'type':'string','const':'a'})[1][0]['reason'])
+    def test_additional_properties_boolean_policy_is_directional(self):
+        open_object={'type':'object'};closed_object={'type':'object','additionalProperties':False}
+        self.assertEqual(self.compare(open_object,closed_object)[0][0]['kind'],'request_additional_properties_incompatible')
+        self.assertEqual(self.compare(closed_object,open_object,'response')[0][0]['kind'],'response_additional_properties_incompatible')
+        self.assertEqual(self.compare(closed_object,open_object)[0],[])
+        self.assertIn('only boolean',self.compare({'type':'object','additionalProperties':{'type':'string'}},closed_object)[1][0]['reason'])

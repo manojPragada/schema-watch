@@ -19,6 +19,8 @@
 
 ## Continuity
 
+2026-10-31: Added directional boolean `additionalProperties` checks: closing request objects or opening response objects is breaking. Schema-valued policies remain explicit coverage warnings. Next: continue only with constraints whose request/response direction is defensible.
+
 2026-10-30: Replaced noisy generic pattern/format notices with precise warnings only when those semantic constraints change; unchanged constraints no longer create false coverage noise. Next: consider additionalProperties directionality only with defensible property-set semantics.
 
 2026-10-29: Added bounded directional minItems/maxItems compatibility checks. Tighter request acceptance and weaker response guarantees are breaking; invalid or one-sided transitions remain warnings. Next: pattern/format changes should remain warnings until semantic comparison is defensible.
