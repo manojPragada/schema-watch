@@ -89,6 +89,11 @@ def compare_schema(left, right, context, schema_path='$', depth=0, left_root=Non
         if tighter:changes.append(dict(location,kind=context['direction']+'_'+name+'_incompatible'))
     length_constraint('minLength',True);length_constraint('maxLength',False)
     length_constraint('minItems',True);length_constraint('maxItems',False)
+    old_unique,new_unique=left.get('uniqueItems',False),right.get('uniqueItems',False)
+    if type(old_unique) is bool and type(new_unique) is bool:
+        incompatible=(not old_unique and new_unique) if context['direction']=='request' else (old_unique and not new_unique)
+        if incompatible:changes.append(dict(location,kind=context['direction']+'_unique_items_incompatible'))
+    elif old_unique!=new_unique:warnings.append(dict(location,reason='uniqueItems transition not checked unless both sides are boolean'))
     for name in ('pattern','format'):
         if left.get(name)!=right.get(name) and (name in left or name in right):
             warnings.append(dict(location,reason=name+' changed; semantic compatibility not checked'))
@@ -104,7 +109,7 @@ def compare_schema(left, right, context, schema_path='$', depth=0, left_root=Non
                    'maxItems', 'uniqueItems', 'contains', 'prefixItems', 'additionalProperties',
                    'patternProperties', 'unevaluatedProperties', 'dependentRequired',
                    'dependentSchemas', 'minProperties', 'maxProperties'}
-    checked={'minimum','maximum','exclusiveMinimum','exclusiveMaximum','minLength','maxLength','minItems','maxItems','pattern','format','additionalProperties'}
+    checked={'minimum','maximum','exclusiveMinimum','exclusiveMaximum','minLength','maxLength','minItems','maxItems','uniqueItems','pattern','format','additionalProperties'}
     unchecked = sorted((left.keys() | right.keys()) & (constraints-checked))
     if unchecked:
         warnings.append(dict(location, reason='Constraints not checked: ' + ', '.join(unchecked)))
