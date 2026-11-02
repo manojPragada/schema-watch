@@ -89,6 +89,7 @@ def compare_schema(left, right, context, schema_path='$', depth=0, left_root=Non
         if tighter:changes.append(dict(location,kind=context['direction']+'_'+name+'_incompatible'))
     length_constraint('minLength',True);length_constraint('maxLength',False)
     length_constraint('minItems',True);length_constraint('maxItems',False)
+    length_constraint('minProperties',True);length_constraint('maxProperties',False)
     old_unique,new_unique=left.get('uniqueItems',False),right.get('uniqueItems',False)
     if type(old_unique) is bool and type(new_unique) is bool:
         incompatible=(not old_unique and new_unique) if context['direction']=='request' else (old_unique and not new_unique)
@@ -109,7 +110,7 @@ def compare_schema(left, right, context, schema_path='$', depth=0, left_root=Non
                    'maxItems', 'uniqueItems', 'contains', 'prefixItems', 'additionalProperties',
                    'patternProperties', 'unevaluatedProperties', 'dependentRequired',
                    'dependentSchemas', 'minProperties', 'maxProperties'}
-    checked={'minimum','maximum','exclusiveMinimum','exclusiveMaximum','minLength','maxLength','minItems','maxItems','uniqueItems','pattern','format','additionalProperties'}
+    checked={'minimum','maximum','exclusiveMinimum','exclusiveMaximum','minLength','maxLength','minItems','maxItems','minProperties','maxProperties','uniqueItems','pattern','format','additionalProperties'}
     unchecked = sorted((left.keys() | right.keys()) & (constraints-checked))
     if unchecked:
         warnings.append(dict(location, reason='Constraints not checked: ' + ', '.join(unchecked)))
