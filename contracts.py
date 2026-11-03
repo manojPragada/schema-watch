@@ -105,12 +105,23 @@ def compare_schema(left, right, context, schema_path='$', depth=0, left_root=Non
             if incompatible:changes.append(dict(location,kind=context['direction']+'_additional_properties_incompatible'))
         elif old_additional!=new_additional:
             warnings.append(dict(location,reason='additionalProperties schema transition not checked; only boolean policies are directional'))
+        def dependencies(schema):
+            value=schema.get('dependentRequired',{})
+            if not isinstance(value,dict) or len(value)>100:return None
+            if not all(isinstance(name,str) and isinstance(required,list) and len(required)<=100 and all(isinstance(item,str) for item in required) for name,required in value.items()):return None
+            return {name:set(required) for name,required in value.items()}
+        old_dependencies,new_dependencies=dependencies(left),dependencies(right)
+        if old_dependencies is None or new_dependencies is None:
+            warnings.append(dict(location,reason='dependentRequired transition not checked unless both sides are bounded string-array maps'))
+        else:
+            incompatible=any((new_dependencies.get(name,set())-old_dependencies.get(name,set())) if context['direction']=='request' else (old_dependencies.get(name,set())-new_dependencies.get(name,set())) for name in old_dependencies.keys()|new_dependencies.keys())
+            if incompatible:changes.append(dict(location,kind=context['direction']+'_dependent_required_incompatible'))
     constraints = {'minimum', 'maximum', 'exclusiveMinimum', 'exclusiveMaximum',
                    'multipleOf', 'minLength', 'maxLength', 'pattern', 'format', 'minItems',
                    'maxItems', 'uniqueItems', 'contains', 'prefixItems', 'additionalProperties',
                    'patternProperties', 'unevaluatedProperties', 'dependentRequired',
                    'dependentSchemas', 'minProperties', 'maxProperties'}
-    checked={'minimum','maximum','exclusiveMinimum','exclusiveMaximum','minLength','maxLength','minItems','maxItems','minProperties','maxProperties','uniqueItems','pattern','format','additionalProperties'}
+    checked={'minimum','maximum','exclusiveMinimum','exclusiveMaximum','minLength','maxLength','minItems','maxItems','minProperties','maxProperties','uniqueItems','pattern','format','additionalProperties','dependentRequired'}
     unchecked = sorted((left.keys() | right.keys()) & (constraints-checked))
     if unchecked:
         warnings.append(dict(location, reason='Constraints not checked: ' + ', '.join(unchecked)))
