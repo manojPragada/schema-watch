@@ -19,6 +19,8 @@ Use `python3` if your system does not provide `python`. No package installation 
 
 ## Usage and behavior
 
+Directional `dependentRequired` comparison accepts only bounded maps of unique string arrays; malformed duplicates produce an explicit coverage warning.
+
 String `minLength`/`maxLength` transitions are directional: tighter request bounds and weaker response guarantees are breaking.
 
 Numeric `minimum`, `maximum`, `exclusiveMinimum`, and `exclusiveMaximum` transitions are directional: tighter request bounds and weaker response guarantees are breaking changes.

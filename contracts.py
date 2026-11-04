@@ -108,7 +108,7 @@ def compare_schema(left, right, context, schema_path='$', depth=0, left_root=Non
         def dependencies(schema):
             value=schema.get('dependentRequired',{})
             if not isinstance(value,dict) or len(value)>100:return None
-            if not all(isinstance(name,str) and isinstance(required,list) and len(required)<=100 and all(isinstance(item,str) for item in required) for name,required in value.items()):return None
+            if not all(isinstance(name,str) and isinstance(required,list) and len(required)<=100 and all(isinstance(item,str) for item in required) and len(required)==len(set(required)) for name,required in value.items()):return None
             return {name:set(required) for name,required in value.items()}
         old_dependencies,new_dependencies=dependencies(left),dependencies(right)
         if old_dependencies is None or new_dependencies is None:
