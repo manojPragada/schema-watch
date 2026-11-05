@@ -19,7 +19,7 @@ Use `python3` if your system does not provide `python`. No package installation 
 
 ## Usage and behavior
 
-Directional `dependentRequired` comparison accepts only bounded maps of unique string arrays; malformed duplicates produce an explicit coverage warning.
+Directional `dependentRequired` comparison accepts only bounded maps of unique, non-empty property-name arrays; empty or oversized names and malformed duplicates produce an explicit coverage warning.
 
 String `minLength`/`maxLength` transitions are directional: tighter request bounds and weaker response guarantees are breaking.
 

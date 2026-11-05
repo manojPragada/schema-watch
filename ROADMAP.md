@@ -19,6 +19,8 @@
 
 ## Continuity
 
+2026-11-05: Bounded `dependentRequired` trigger and dependency names to non-empty 256-character strings, keeping malformed or pathological maps visible as coverage warnings instead of directional findings. Next: continue only with constraints whose request/response direction is defensible.
+
 2026-11-04: Rejected duplicate names inside `dependentRequired` arrays from directional comparison instead of silently collapsing malformed input into sets. The transition remains visible as a coverage warning. Next: continue only with constraints whose request/response direction is defensible.
 
 2026-11-03: Added bounded directional `dependentRequired` checks. New request dependencies and removed response guarantees are breaking; malformed or oversized mappings remain explicit warnings. Next: continue only with constraints whose request/response direction is defensible.

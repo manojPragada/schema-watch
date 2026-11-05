@@ -11,3 +11,5 @@ class ObjectConstraintTests(unittest.TestCase):
   changes,warnings=compare_schema(old,new,context);self.assertEqual([item['kind'] for item in changes],['request_dependent_required_incompatible']);self.assertEqual(warnings,[])
   changes,warnings=compare_schema(new,old,dict(context,direction='response'));self.assertEqual([item['kind'] for item in changes],['response_dependent_required_incompatible']);self.assertEqual(warnings,[])
   changes,warnings=compare_schema(old,{'type':'object','dependentRequired':{'card':['billing','billing']}},context);self.assertEqual(changes,[]);self.assertRegex(warnings[0]['reason'],'bounded string-array maps')
+  for malformed in ({'': ['billing']},{'card':['']},{'card':['x'*257]}):
+   changes,warnings=compare_schema(old,{'type':'object','dependentRequired':malformed},context);self.assertEqual(changes,[]);self.assertRegex(warnings[0]['reason'],'bounded string-array maps')
