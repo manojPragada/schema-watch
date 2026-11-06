@@ -19,6 +19,8 @@
 
 ## Continuity
 
+2026-11-06: Bounded `required` arrays to 100 unique, non-empty property names of at most 256 characters. Malformed transitions now remain explicit coverage warnings instead of being silently collapsed into sets. Next: continue only with constraints whose request/response direction is defensible.
+
 2026-11-05: Bounded `dependentRequired` trigger and dependency names to non-empty 256-character strings, keeping malformed or pathological maps visible as coverage warnings instead of directional findings. Next: continue only with constraints whose request/response direction is defensible.
 
 2026-11-04: Rejected duplicate names inside `dependentRequired` arrays from directional comparison instead of silently collapsing malformed input into sets. The transition remains visible as a coverage warning. Next: continue only with constraints whose request/response direction is defensible.

@@ -27,6 +27,13 @@ class NestedTests(unittest.TestCase):
         self.assertEqual(self.compare(old, new)[0][0]['schema_path'], '$["profile"]')
         self.assertEqual(self.compare(new, old, 'response')[0][0]['kind'], 'response_required_guarantee_removed')
 
+    def test_required_property_names_are_bounded_and_unique(self):
+        valid={'type':'object','required':['id']}
+        for malformed in (['id','id'],[''],['x'*257],['x']*101):
+            changes,warnings=self.compare(valid,{'type':'object','required':malformed})
+            self.assertEqual(changes,[])
+            self.assertIn('unique, bounded property names',warnings[0]['reason'])
+
     def test_nested_refs_warn_while_siblings_are_compared(self):
         old = {'type': 'object', 'properties': {'a': {'$ref': '#/x'}, 'b': {'type': 'string'}}}
         new = {'type': 'object', 'properties': {'a': {}, 'b': {'type': 'integer'}}}

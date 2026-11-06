@@ -25,8 +25,8 @@ def inline_schema(schema):
         raise ValueError('Schema references, composition and boolean schemas are not checked')
     required = schema.get('required', [])
     properties = schema.get('properties', {})
-    if not isinstance(required, list) or not all(isinstance(name, str) for name in required):
-        raise ValueError('required must be an array of strings')
+    if not isinstance(required, list) or len(required)>100 or not all(isinstance(name,str) and 1<=len(name)<=256 for name in required) or len(required)!=len(set(required)):
+        raise ValueError('required must be an array of at most 100 unique, bounded property names')
     if not isinstance(properties, dict):
         raise ValueError('properties must be an object')
     # Directional requiredness needs readOnly/writeOnly-aware handling, still pending.
