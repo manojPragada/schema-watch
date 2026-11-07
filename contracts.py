@@ -1,5 +1,7 @@
 """Partial, directional checks for inline application/json body contracts."""
 import json
+import math
+from fractions import Fraction
 from urllib.parse import unquote
 TYPES = {'null', 'boolean', 'object', 'array', 'string', 'integer', 'non_integer_number'}
 UNSUPPORTED = {'$ref', 'allOf', 'anyOf', 'oneOf', 'not', 'if', 'then', 'else', '$dynamicRef'}
@@ -80,6 +82,18 @@ def compare_schema(left, right, context, schema_path='$', depth=0, left_root=Non
         if tighter:changes.append(dict(location,kind=context['direction']+'_'+name+'_incompatible'))
     for name in ('minimum','exclusiveMinimum'):numeric_constraint(name,True)
     for name in ('maximum','exclusiveMaximum'):numeric_constraint(name,False)
+    def valid_multiple(value):return type(value) in (int,float) and math.isfinite(value) and value>0
+    old_multiple,new_multiple=left.get('multipleOf'),right.get('multipleOf')
+    if 'multipleOf' in left or 'multipleOf' in right:
+        if ('multipleOf' in left and not valid_multiple(old_multiple)) or ('multipleOf' in right and not valid_multiple(new_multiple)):
+            warnings.append(dict(location,reason='multipleOf transition not checked unless supplied values are finite positive numbers'))
+        else:
+            incompatible=False
+            if context['direction']=='request':
+                incompatible='multipleOf' in right and ('multipleOf' not in left or (Fraction(str(old_multiple))/Fraction(str(new_multiple))).denominator!=1)
+            else:
+                incompatible='multipleOf' in left and ('multipleOf' not in right or (Fraction(str(new_multiple))/Fraction(str(old_multiple))).denominator!=1)
+            if incompatible:changes.append(dict(location,kind=context['direction']+'_multipleOf_incompatible'))
     def length_constraint(name,lower):
         old,new=left.get(name),right.get(name)
         if old is None and new is None:return
@@ -121,7 +135,7 @@ def compare_schema(left, right, context, schema_path='$', depth=0, left_root=Non
                    'maxItems', 'uniqueItems', 'contains', 'prefixItems', 'additionalProperties',
                    'patternProperties', 'unevaluatedProperties', 'dependentRequired',
                    'dependentSchemas', 'minProperties', 'maxProperties'}
-    checked={'minimum','maximum','exclusiveMinimum','exclusiveMaximum','minLength','maxLength','minItems','maxItems','minProperties','maxProperties','uniqueItems','pattern','format','additionalProperties','dependentRequired'}
+    checked={'minimum','maximum','exclusiveMinimum','exclusiveMaximum','multipleOf','minLength','maxLength','minItems','maxItems','minProperties','maxProperties','uniqueItems','pattern','format','additionalProperties','dependentRequired'}
     unchecked = sorted((left.keys() | right.keys()) & (constraints-checked))
     if unchecked:
         warnings.append(dict(location, reason='Constraints not checked: ' + ', '.join(unchecked)))

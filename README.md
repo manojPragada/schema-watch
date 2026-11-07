@@ -23,7 +23,7 @@ Directional `dependentRequired` comparison accepts only bounded maps of unique, 
 
 String `minLength`/`maxLength` transitions are directional: tighter request bounds and weaker response guarantees are breaking.
 
-Numeric `minimum`, `maximum`, `exclusiveMinimum`, and `exclusiveMaximum` transitions are directional: tighter request bounds and weaker response guarantees are breaking changes.
+Numeric `minimum`, `maximum`, `exclusiveMinimum`, `exclusiveMaximum`, and positive finite `multipleOf` transitions are directional: tighter request acceptance and weaker response guarantees are breaking changes. Non-divisible `multipleOf` changes are treated as incompatible rather than guessed compatible.
 
 Exit codes: `0` means no changes detected within the supported scope, `1` means breaking changes found, `2` means invalid input or a read error. Path-level parameters are inherited; operation-level declarations override parameters with the same location and name.
 
@@ -94,7 +94,7 @@ ROADMAP.md      completed work and prioritized next steps
 
 ## Architecture
 
-Body type and required-property checks recurse through common object properties and homogeneous array `items`, including bounded same-document `$ref` targets, with paths such as `$["profile"]["id"]` and `$[*]`. Request narrowing and response widening are checked directionally. Nesting beyond 32 levels, unresolved/external references, composition, boolean schemas, property additions/removals and unsupported constraints produce coverage warnings. Numeric/string limits, enums, formats and additional-property policies are not compatibility-checked. No findings is **not** proof of compatibility; inspect `coverage_warnings`, which do not change the existing exit code. This remains a partial checker, not a full schema validator.
+Body checks recurse through common object properties and homogeneous array `items`, including bounded same-document `$ref` targets, with paths such as `$["profile"]["id"]` and `$[*]`. Supported directional checks include types, requiredness, enum/const, selected numeric/string/array/object bounds, boolean additional-property and uniqueness policies, and bounded `dependentRequired`. Nesting beyond 32 levels, unresolved/external references, composition, boolean schemas, property additions/removals and unsupported constraints produce coverage warnings. No findings is **not** proof of compatibility; inspect `coverage_warnings`, which do not change the existing exit code.
 
 Semantics references: [JSON Schema object properties](https://json-schema.org/understanding-json-schema/reference/object) and [OpenAPI Schema Object](https://spec.openapis.org/oas/v3.0.4.html#schema-object). `readOnly`/`writeOnly` contracts remain explicitly unsupported rather than guessed across dialects.
 
@@ -102,7 +102,7 @@ The dependency-free CLI in app.py handles operation/parameter checks; contracts.
 
 ## Limitations
 
-This is a partial checker, not an OpenAPI validator or compatibility guarantee. Body checks cover bounded inline or same-document-referenced application/json types and required-property sets, including common nested properties and homogeneous array items. Enum/range constraints, removed media types/status codes, security requirements and YAML are not checked. Path-item `$ref` references are rejected. Parameter and schema references support same-document object-key JSON Pointers only; array-index pointers, external files and network references are not supported. No dashboard yet.
+This is a partial checker, not an OpenAPI validator or compatibility guarantee. Removed media types/status codes, security requirements, YAML, composition and many JSON Schema constraints remain unchecked or warning-only. Parameter, path-item and schema references support bounded same-document object-key JSON Pointers only; array-index pointers, external files and network references are not supported. No dashboard yet.
 
 ## Running and deployment
 
