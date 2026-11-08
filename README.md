@@ -33,6 +33,8 @@ Same-document JSON Pointer references are resolved for parameters, schemas and p
 
 Nested enum/const checks are directional: removing an accepted request value or adding a possible response value is reported as breaking. Both sides must expose 1–100 literal values; partial transitions remain coverage warnings rather than guesses.
 
+OpenAPI 3.0 `nullable` transitions participate in the same directional type-set comparison: removing accepted request nulls or adding possible response nulls is breaking. Non-boolean `nullable` values produce an explicit coverage warning rather than being silently treated as false.
+
 ## CI annotations and warning policy
 
 In GitHub Actions, emit escaped workflow annotations for every supported breaking change and coverage warning:

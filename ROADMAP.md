@@ -19,6 +19,8 @@
 
 ## Continuity
 
+2026-11-08: Made OpenAPI 3.0 `nullable` transitions explicitly directional and rejected malformed non-boolean values to coverage warnings instead of silently treating them as false. Next: continue only with constraints whose request/response direction is defensible.
+
 2026-11-07: Added exact directional `multipleOf` compatibility using rational divisibility. Tighter request acceptance and weaker response guarantees are breaking; invalid values remain coverage warnings. Next: continue only with constraints whose request/response direction is defensible.
 
 2026-11-06: Bounded `required` arrays to 100 unique, non-empty property names of at most 256 characters. Malformed transitions now remain explicit coverage warnings instead of being silently collapsed into sets. Next: continue only with constraints whose request/response direction is defensible.

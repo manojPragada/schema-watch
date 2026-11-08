@@ -25,6 +25,8 @@ def type_set(schema):
 def inline_schema(schema):
     if not isinstance(schema, dict) or UNSUPPORTED.intersection(schema):
         raise ValueError('Schema references, composition and boolean schemas are not checked')
+    if 'nullable' in schema and type(schema['nullable']) is not bool:
+        raise ValueError('nullable must be a boolean when supplied')
     required = schema.get('required', [])
     properties = schema.get('properties', {})
     if not isinstance(required, list) or len(required)>100 or not all(isinstance(name,str) and 1<=len(name)<=256 for name in required) or len(required)!=len(set(required)):

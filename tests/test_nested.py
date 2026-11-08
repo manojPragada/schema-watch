@@ -65,6 +65,12 @@ class NestedTests(unittest.TestCase):
         self.assertEqual(self.compare(old,narrow)[0][0]['kind'],'request_enum_incompatible')
         self.assertEqual(self.compare(old,wide)[0],[])
         self.assertEqual(self.compare(old,wide,'response')[0][0]['kind'],'response_enum_incompatible')
+    def test_nullable_is_directional_and_malformed_values_warn(self):
+        required_string={'type':'string','nullable':False};optional_string={'type':'string','nullable':True}
+        self.assertEqual(self.compare(optional_string,required_string)[0][0]['kind'],'request_type_incompatible')
+        self.assertEqual(self.compare(required_string,optional_string,'response')[0][0]['kind'],'response_type_incompatible')
+        changes,warnings=self.compare(required_string,{'type':'string','nullable':'yes'})
+        self.assertEqual(changes,[]);self.assertIn('nullable must be a boolean',warnings[0]['reason'])
     def test_partial_enum_transitions_warn(self):
         self.assertIn('Enum/const',self.compare({'type':'string'},{'type':'string','const':'a'})[1][0]['reason'])
     def test_additional_properties_boolean_policy_is_directional(self):
