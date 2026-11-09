@@ -74,4 +74,16 @@ class Tests(unittest.TestCase):
     def test_new_required_body_detected(self):
         old=self.spec({});new=self.body({'type':'object'});new['paths']['/pets']['get']['requestBody']['required']=True
         self.assertEqual(compare(old,new)[0]['kind'],'new_required_request_body')
+    def test_removed_response_status_is_breaking(self):
+        old=self.spec({'responses':{'200':{'description':'ok'},'404':{'description':'missing'}}})
+        new=self.spec({'responses':{'200':{'description':'ok'}}})
+        finding=compare(old,new)[0]
+        self.assertEqual((finding['kind'],finding['status']),('response_status_removed','404'))
+    def test_removed_json_media_types_are_breaking(self):
+        for direction in ('request','response'):
+            old=self.body({'type':'object'},direction)
+            new=self.body({'type':'object'},direction)
+            target=new['paths']['/pets']['get']['requestBody'] if direction=='request' else new['paths']['/pets']['get']['responses']['200']
+            target['content']={'text/plain':{'schema':{'type':'string'}}}
+            self.assertEqual(compare(old,new)[0]['kind'],direction+'_json_media_type_removed')
 

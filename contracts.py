@@ -176,6 +176,8 @@ def compare_contracts(before, after, operations):
         pairs = [('request', 'body', old_body, new_body)]
         old_responses, new_responses = old.get('responses', {}), new.get('responses', {})
         if isinstance(old_responses, dict) and isinstance(new_responses, dict):
+            for status in sorted(old_responses.keys() - new_responses.keys()):
+                changes.append({'kind': 'response_status_removed', 'operation': label, 'direction': 'response', 'status': str(status)})
             pairs += [('response', str(status), old_responses[status], new_responses[status]) for status in sorted(old_responses.keys() & new_responses.keys())]
         for direction, status, left, right in pairs:
             context = {'operation': label, 'direction': direction, 'status': status}
@@ -185,6 +187,9 @@ def compare_contracts(before, after, operations):
             left_content, right_content = left.get('content', {}), right.get('content', {})
             if not isinstance(left_content, dict) or not isinstance(right_content, dict):
                 warnings.append(dict(context, reason='Malformed content object not checked'))
+                continue
+            if 'application/json' in left_content and 'application/json' not in right_content:
+                changes.append(dict(context, kind=direction + '_json_media_type_removed'))
                 continue
             if 'application/json' not in left_content or 'application/json' not in right_content:
                 continue

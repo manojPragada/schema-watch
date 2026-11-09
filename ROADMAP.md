@@ -19,6 +19,8 @@
 
 ## Continuity
 
+2026-11-09: Added directional findings for removed response statuses and removed `application/json` request/response media types. Newly added representations remain outside the checked scope rather than being guessed incompatible. Next: continue only with operation/body transitions whose direction is defensible.
+
 2026-11-08: Made OpenAPI 3.0 `nullable` transitions explicitly directional and rejected malformed non-boolean values to coverage warnings instead of silently treating them as false. Next: continue only with constraints whose request/response direction is defensible.
 
 2026-11-07: Added exact directional `multipleOf` compatibility using rational divisibility. Tighter request acceptance and weaker response guarantees are breaking; invalid values remain coverage warnings. Next: continue only with constraints whose request/response direction is defensible.
