@@ -19,6 +19,8 @@
 
 ## Continuity
 
+2026-11-10: Added directional detection for removed response header names using HTTP's case-insensitive name semantics. Header-schema transitions remain outside checked scope rather than being guessed compatible. Next: continue only with operation/body transitions whose direction is defensible.
+
 2026-11-09: Added directional findings for removed response statuses and removed `application/json` request/response media types. Newly added representations remain outside the checked scope rather than being guessed incompatible. Next: continue only with operation/body transitions whose direction is defensible.
 
 2026-11-08: Made OpenAPI 3.0 `nullable` transitions explicitly directional and rejected malformed non-boolean values to coverage warnings instead of silently treating them as false. Next: continue only with constraints whose request/response direction is defensible.

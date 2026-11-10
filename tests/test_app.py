@@ -87,3 +87,18 @@ class Tests(unittest.TestCase):
             target['content']={'text/plain':{'schema':{'type':'string'}}}
             self.assertEqual(compare(old,new)[0]['kind'],direction+'_json_media_type_removed')
 
+    def test_removed_response_header_is_breaking_case_insensitively(self):
+        old=self.spec({'responses':{'200':{'headers':{'X-Rate-Limit':{'schema':{'type':'integer'}}}}}})
+        renamed=self.spec({'responses':{'200':{'headers':{'x-rate-limit':{'schema':{'type':'integer'}}}}}})
+        removed=self.spec({'responses':{'200':{}}})
+        self.assertEqual(compare(old,renamed),[])
+        finding=compare(old,removed)[0]
+        self.assertEqual((finding['kind'],finding['name'],finding['status']),('response_header_removed','X-Rate-Limit','200'))
+
+    def test_malformed_response_headers_remain_coverage_warnings(self):
+        from contracts import compare_contracts
+        old=self.spec({'responses':{'200':{'headers':['bad']}}})
+        new=self.spec({'responses':{'200':{}}})
+        changes,warnings=compare_contracts(old,new,[('get','/pets')])
+        self.assertEqual(changes,[]);self.assertTrue(any('headers' in item['reason'] for item in warnings))
+

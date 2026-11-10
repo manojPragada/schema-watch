@@ -184,6 +184,19 @@ def compare_contracts(before, after, operations):
             if not isinstance(left, dict) or not isinstance(right, dict) or '$ref' in left or '$ref' in right:
                 warnings.append(dict(context, reason='Referenced or malformed body/response not checked'))
                 continue
+            if direction == 'response':
+                left_headers, right_headers = left.get('headers', {}), right.get('headers', {})
+                if not isinstance(left_headers, dict) or not isinstance(right_headers, dict):
+                    warnings.append(dict(context, reason='Malformed response headers object not checked'))
+                else:
+                    old_names = {name.lower(): name for name in left_headers if isinstance(name, str)}
+                    new_names = {name.lower(): name for name in right_headers if isinstance(name, str)}
+                    valid = (len(old_names) == len(left_headers) and len(new_names) == len(right_headers))
+                    if not valid:
+                        warnings.append(dict(context, reason='Response header names must be unique case-insensitive strings'))
+                    else:
+                        for normalized in sorted(old_names.keys() - new_names.keys()):
+                            changes.append(dict(context, kind='response_header_removed', name=old_names[normalized]))
             left_content, right_content = left.get('content', {}), right.get('content', {})
             if not isinstance(left_content, dict) or not isinstance(right_content, dict):
                 warnings.append(dict(context, reason='Malformed content object not checked'))
