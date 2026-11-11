@@ -197,6 +197,15 @@ def compare_contracts(before, after, operations):
                     else:
                         for normalized in sorted(old_names.keys() - new_names.keys()):
                             changes.append(dict(context, kind='response_header_removed', name=old_names[normalized]))
+                        for normalized in sorted(old_names.keys() & new_names.keys()):
+                            old_name, new_name = old_names[normalized], new_names[normalized]
+                            old_header, new_header = left_headers[old_name], right_headers[new_name]
+                            header_context = dict(context, header=old_name)
+                            if not isinstance(old_header, dict) or not isinstance(new_header, dict) or '$ref' in old_header or '$ref' in new_header or 'content' in old_header or 'content' in new_header:
+                                warnings.append(dict(header_context, reason='Referenced, content-based or malformed response header schema not checked'))
+                                continue
+                            found, skipped = compare_schema(old_header.get('schema', {}), new_header.get('schema', {}), header_context, '$header[' + json.dumps(old_name) + ']', left_root=before, right_root=after)
+                            changes.extend(found);warnings.extend(skipped)
             left_content, right_content = left.get('content', {}), right.get('content', {})
             if not isinstance(left_content, dict) or not isinstance(right_content, dict):
                 warnings.append(dict(context, reason='Malformed content object not checked'))

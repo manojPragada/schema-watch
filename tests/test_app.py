@@ -102,3 +102,17 @@ class Tests(unittest.TestCase):
         changes,warnings=compare_contracts(old,new,[('get','/pets')])
         self.assertEqual(changes,[]);self.assertTrue(any('headers' in item['reason'] for item in warnings))
 
+    def test_response_header_schema_weakening_is_breaking_case_insensitively(self):
+        old=self.spec({'responses':{'200':{'headers':{'X-Rate-Limit':{'schema':{'type':'integer','minimum':0}}}}}})
+        new=self.spec({'responses':{'200':{'headers':{'x-rate-limit':{'schema':{'type':'number','minimum':-1}}}}}})
+        findings=compare(old,new)
+        self.assertEqual({item['kind'] for item in findings},{'response_type_incompatible','response_minimum_incompatible'})
+        self.assertTrue(all(item['header']=='X-Rate-Limit' and item['schema_path']=='$header["X-Rate-Limit"]' for item in findings))
+
+    def test_referenced_response_header_remains_a_warning(self):
+        from contracts import compare_contracts
+        old=self.spec({'responses':{'200':{'headers':{'X-Trace':{'$ref':'#/components/headers/Trace'}}}}})
+        new=self.spec({'responses':{'200':{'headers':{'x-trace':{'schema':{'type':'string'}}}}}})
+        changes,warnings=compare_contracts(old,new,[('get','/pets')])
+        self.assertEqual(changes,[]);self.assertTrue(any(item.get('header')=='X-Trace' for item in warnings))
+
