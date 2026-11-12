@@ -19,6 +19,8 @@
 
 ## Continuity
 
+2026-11-12: Added a conservative operation-security check that reports previously anonymous operations becoming authentication-only, including inherited top-level security and explicit anonymous overrides. Changes among already-authenticated schemes remain outside scope. Next: continue only with operation/body transitions whose direction is defensible.
+
 2026-11-11: Added directional response-header schema checks for matching case-insensitive header names, reusing the bounded type and constraint rules already applied to JSON responses. Referenced, content-based and malformed header contracts remain explicit coverage warnings. Next: continue only with operation/body transitions whose direction is defensible.
 
 2026-11-10: Added directional detection for removed response header names using HTTP's case-insensitive name semantics. Header-schema transitions remain outside checked scope rather than being guessed compatible. Next: continue only with operation/body transitions whose direction is defensible.

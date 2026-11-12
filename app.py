@@ -52,16 +52,32 @@ def operations(spec):
             result[(method,path)]=params
     return result
 
+def operation_security(spec):
+    """Report whether each operation excludes anonymous access."""
+    result={}
+    default=spec.get('security',[])
+    for path,item in spec['paths'].items():
+        item=resolve_object_ref(spec,item,'Path item')
+        for method,op in item.items():
+            if method not in METHODS:continue
+            requirements=op.get('security',default)
+            if not isinstance(requirements,list) or not all(isinstance(requirement,dict) for requirement in requirements):
+                raise ValueError('Security requirements must be an array of objects')
+            result[(method,path)]=bool(requirements) and all(bool(requirement) for requirement in requirements)
+    return result
+
 def resolved_paths_document(spec):
     """Return a shallow view whose path-item references are expanded for body checks."""
     document=dict(spec);document['paths']={path:resolve_object_ref(spec,item,'Path item') for path,item in spec['paths'].items()}
     return document
 
 def compare(before,after):
-    old=operations(before);new=operations(after);changes=[]
+    old=operations(before);new=operations(after);old_security=operation_security(before);new_security=operation_security(after);changes=[]
     for method,path in sorted(old):
         if (method,path) not in new:changes.append({'kind':'removed_operation','operation':f'{method.upper()} {path}'})
         else:
+            if not old_security[(method,path)] and new_security[(method,path)]:
+                changes.append({'kind':'anonymous_access_removed','operation':f'{method.upper()} {path}'})
             for param,required in sorted(new[(method,path)].items()):
                 if required and not old[(method,path)].get(param,False):
                     changes.append({'kind':'new_required_parameter','operation':f'{method.upper()} {path}','location':param[0],'name':param[1]})

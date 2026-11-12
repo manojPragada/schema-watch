@@ -7,6 +7,19 @@ class Tests(unittest.TestCase):
         new=self.spec({'parameters':[{'name':'id','in':'query','required':True}]})
         self.assertEqual(compare(self.spec({}),new)[0]['name'],'id')
     def test_optional(self):self.assertEqual(compare(self.spec({}),self.spec({'parameters':[{'name':'id','in':'query'}]})),[])
+    def test_adding_authentication_to_public_operation_is_breaking(self):
+        public=self.spec({});secured=self.spec({'security':[{'oauth':['read']}]})
+        self.assertEqual(compare(public,secured)[0]['kind'],'anonymous_access_removed')
+        secured['paths']['/pets']['get']['security']=[{}]
+        self.assertEqual(compare(public,secured),[])
+    def test_top_level_security_and_public_override(self):
+        old=self.spec({});new=self.spec({});new['security']=[{'apiKey':[]}]
+        self.assertEqual(compare(old,new)[0]['kind'],'anonymous_access_removed')
+        new['paths']['/pets']['get']['security']=[]
+        self.assertEqual(compare(old,new),[])
+    def test_malformed_security_contract_is_rejected(self):
+        malformed=self.spec({'security':'oauth'})
+        with self.assertRaises(ValueError):compare(self.spec({}),malformed)
     def test_operation_override(self):
         old=self.spec({});old['paths']['/pets']['parameters']=[{'name':'id','in':'query','required':True}]
         new=self.spec({'parameters':[{'name':'id','in':'query','required':True}]})

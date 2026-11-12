@@ -25,7 +25,7 @@ String `minLength`/`maxLength` transitions are directional: tighter request boun
 
 Numeric `minimum`, `maximum`, `exclusiveMinimum`, `exclusiveMaximum`, and positive finite `multipleOf` transitions are directional: tighter request acceptance and weaker response guarantees are breaking changes. Non-divisible `multipleOf` changes are treated as incompatible rather than guessed compatible.
 
-Exit codes: `0` means no changes detected within the supported scope, `1` means breaking changes found, `2` means invalid input or a read error. Path-level parameters are inherited; operation-level declarations override parameters with the same location and name.
+Exit codes: `0` means no changes detected within the supported scope, `1` means breaking changes found, `2` means invalid input or a read error. Path-level parameters are inherited; operation-level declarations override parameters with the same location and name. Adding a non-anonymous effective security requirement to a previously public operation is reported as breaking; operation-level `security: []` or an empty requirement object continues to permit anonymous access.
 
 Run `python app.py --help` for available options.
 
@@ -104,7 +104,7 @@ The dependency-free CLI in app.py handles operation/parameter checks; contracts.
 
 ## Limitations
 
-This is a partial checker, not an OpenAPI validator or compatibility guarantee. It checks removed response statuses, response header names, bounded matching response-header schemas and removed `application/json` request/response media types, but referenced/content-based headers, other media-type transitions, security requirements, YAML, composition and many JSON Schema constraints remain unchecked or warning-only. Parameter, path-item and schema references support bounded same-document object-key JSON Pointers only; array-index pointers, external files and network references are not supported. No dashboard yet.
+This is a partial checker, not an OpenAPI validator or compatibility guarantee. It checks removal of anonymous operation access, removed response statuses, response header names, bounded matching response-header schemas and removed `application/json` request/response media types, but security-scheme changes for operations that already require authentication, referenced/content-based headers, other media-type transitions, YAML, composition and many JSON Schema constraints remain unchecked or warning-only. Parameter, path-item and schema references support bounded same-document object-key JSON Pointers only; array-index pointers, external files and network references are not supported. No dashboard yet.
 
 ## Running and deployment
 
